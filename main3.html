@@ -35,7 +35,7 @@
                 const imageData = canvas.toDataURL("image/png");
 
                 // Send the image to the server (you can replace the URL with your server)
-                const response = await fetch("http://localhost:3000/server.js", {
+                const response = await fetch("http://localhost:3000", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ image: imageData })
