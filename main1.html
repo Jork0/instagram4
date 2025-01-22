@@ -13,23 +13,62 @@
     #camera-input {
       display: none;
     }
+    #video {
+      width: 100%;
+      height: auto;
+      border: 1px solid black;
+    }
+    #capture-btn {
+      display: block;
+      margin-top: 10px;
+      background-color: blue;
+      color: white;
+      padding: 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <a href="#" class="camera-link" onclick="document.getElementById('camera-input').click();">
-    Take a Photo
-  </a>
+  <h1>Camera to Chat</h1>
+  <video id="video" autoplay></video>
+  <button id="capture-btn">Capture Photo</button>
+
   <input 
     type="file" 
     accept="image/*" 
     capture="user" 
     id="camera-input"
-    onchange="handlePhoto(event)"
-  >
+    style="display:none;" 
+    onchange="handlePhoto(event)">
+    
   <script>
-    async function handlePhoto(event) {
-      const file = event.target.files[0];
-      if (file) {
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+      } catch (error) {
+        console.error("Error accessing the camera:", error);
+        alert("Unable to access the camera. Please check your device settings.");
+      }
+    }
+
+    function capturePhoto() {
+      const video = document.getElementById("video");
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      
+      // Set canvas dimensions to match the video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw the current frame from the video to the canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Convert the canvas image to a file
+      canvas.toBlob(async (blob) => {
+        const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+
         // Convert file to a FormData object
         const formData = new FormData();
         formData.append("photo", file);
@@ -61,8 +100,13 @@
           console.error("Error sending photo:", error);
           alert("Failed to send photo. Please try again.");
         }
-      }
+      }, "image/jpeg");
     }
+
+    document.getElementById("capture-btn").addEventListener("click", capturePhoto);
+
+    // Start the camera when the page loads
+    startCamera();
   </script>
 </body>
 </html>
